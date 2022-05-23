@@ -73,6 +73,23 @@ async function run() {
             res.send(result);
         });
 
+
+        // get all orders
+
+        app.get('/order', async (req, res) => {
+            const result = await ordersCollection.find({}).toArray();
+            res.send(result);
+        });
+
+        // deleteing a single order
+
+        app.delete('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // issuing jwt token for login and signup
 
         app.post('/user/:email', async (req, res) => {
