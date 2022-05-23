@@ -29,9 +29,20 @@ async function run() {
 
         const ordersCollection = client.db('mason_hut').collection('orders');
 
+        const reviewsCollection = client.db('mason_hut').collection('reviews');
+
 
         // verify jwt token
 
+
+        // getting user specific order
+
+        app.get('/myorder', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const result = await ordersCollection.find(query).toArray();
+            res.send(result)
+        });
 
         // load all tools 
 
@@ -80,6 +91,14 @@ async function run() {
             const result = await ordersCollection.find({}).toArray();
             res.send(result);
         });
+
+        // all reviews
+
+        app.get('/review', async (req, res) => {
+            const result = await reviewsCollection.find({}).toArray();
+            res.send(result);
+        });
+
 
         // deleteing a single order
 
