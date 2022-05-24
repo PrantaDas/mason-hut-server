@@ -62,8 +62,8 @@ async function run() {
                 const result = await ordersCollection.find(query).toArray();
                 return res.send(result);
             }
-            
-            
+
+
             else {
                 return res.status(403).send({ message: 'Forbidden Access' })
             }
@@ -132,6 +132,30 @@ async function run() {
             res.send(result);
         });
 
+
+        // load specific user information
+
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const result = await usersCollection.findOne(query);
+            res.send(result);
+        });
+
+
+        // upload user informatin
+
+        app.put('/user/:email', async (req, res) => {
+            const updatedProfile = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: updatedProfile
+            };
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
 
         // deleteing a single order
 
