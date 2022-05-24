@@ -100,6 +100,15 @@ async function run() {
         });
 
 
+        // post a review
+
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await reviewsCollection.insertOne(review);
+            res.send(result);
+        });
+
+
         // deleteing a single order
 
         app.delete('/order/:id', async (req, res) => {
