@@ -33,15 +33,41 @@ async function run() {
 
 
         // verify jwt token
-
+        const verifyJWT = (req, res, next) => {
+            // console.log('abc');
+            const authHeader = req.headers.authorization;
+            // console.log(authHeader);
+            if (!authHeader) {
+                return res.status(401).send({ message: 'unauthorized access' });
+            }
+            const token = authHeader.split(' ')[1];
+            // console.log(token);
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+                if (err) {
+                    return res.status(403).send({ message: 'forbidden access' });
+                }
+                req.decoded = decoded;
+                next();
+            })
+        };
 
         // getting user specific order
 
-        app.get('/myorder', async (req, res) => {
+        app.get('/myorder', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            const query = { email: email };
-            const result = await ordersCollection.find(query).toArray();
-            res.send(result)
+            const decodedEmail = req.decoded.email;
+            if (decodedEmail === email) {
+                const query = { email: email };
+                console.log(query);
+                const result = await ordersCollection.find(query).toArray();
+                return res.send(result);
+            }
+            
+            
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' })
+            }
+
         });
 
         // load all tools 
@@ -53,10 +79,8 @@ async function run() {
 
         // load single tools by id
 
-        app.get('/tools/:id', async (req, res) => {
-            const authHeader = req.headers.authorization;
-            const id = req.params.id
-            // console.log(authHeader);
+        app.get('/tools/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
@@ -76,7 +100,7 @@ async function run() {
             res.send(result)
         });
 
-        // order collection
+        // adding order 
 
         app.post('/order', async (req, res) => {
             const order = req.body;
