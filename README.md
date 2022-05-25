@@ -1,10 +1,11 @@
-# Site name:Daily Deals
+# Site name:Mason Hut
 ### Live Site  Link Below:
 Live Site:[]()
 
 
 
 ## Web site features and functionality:
+* The site is a manufacturer based trading website
 * User can register easily
 * They can order a minimum quantity of product in every order
 * They can cancel order anytime if it is not paid
