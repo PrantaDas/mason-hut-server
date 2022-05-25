@@ -51,6 +51,19 @@ async function run() {
             })
         };
 
+        // verify the user is admin or not
+
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await usersCollection.findOne({ email: requester });
+            if (requesterAccount.admin) {
+                next();
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+        };
+
         // getting user specific order
 
         app.get('/myorder', verifyJWT, async (req, res) => {
@@ -132,6 +145,13 @@ async function run() {
             res.send(result);
         });
 
+        // load all user
+
+        app.get('/user', async (req, res) => {
+            const result = await usersCollection.find({}).toArray();
+            res.send(result);
+        });
+
 
         // load specific user information
 
@@ -157,6 +177,20 @@ async function run() {
             res.send(result);
         });
 
+        // making a user a admin
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const updatedProfile = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: updatedProfile
+            };
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
         // deleteing a single order
 
         app.delete('/order/:id', async (req, res) => {
@@ -164,7 +198,7 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
             res.send(result);
-        })
+        });
 
         // issuing jwt token for login and signup
 
