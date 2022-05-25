@@ -176,7 +176,7 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
-
+        // admin level api
         // making a user a admin
 
         app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
@@ -188,6 +188,16 @@ async function run() {
                 $set: updatedProfile
             };
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+        // adding a product by admin
+
+        app.post('/addproduct/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            console.log(email);
+            const tool=req.body;
+            const result=await toolsCollection.insertOne(tool);
             res.send(result);
         });
 
