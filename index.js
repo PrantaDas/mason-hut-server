@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 
 app.use(cors());
 app.use(express.json());
@@ -71,7 +73,7 @@ async function run() {
             const decodedEmail = req.decoded.email;
             if (decodedEmail === email) {
                 const query = { email: email };
-                console.log(query);
+                // console.log(query);
                 const result = await ordersCollection.find(query).toArray();
                 return res.send(result);
             }
@@ -82,6 +84,15 @@ async function run() {
             }
 
         });
+
+        // getting user specific single order
+
+        app.get('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.findOne(query);
+            res.send(result);
+        })
 
         // load all tools 
 
@@ -94,6 +105,7 @@ async function run() {
 
         app.get('/tools/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
+            console.log(id);
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
@@ -126,6 +138,23 @@ async function run() {
 
         app.get('/order', async (req, res) => {
             const result = await ordersCollection.find({}).toArray();
+            res.send(result);
+        });
+
+        // update order
+
+        app.put('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const info = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: info.transactionId
+                }
+            };
+            const result = await ordersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
 
@@ -195,11 +224,22 @@ async function run() {
 
         app.post('/addproduct/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            console.log(email);
-            const tool=req.body;
-            const result=await toolsCollection.insertOne(tool);
+            // console.log(email);
+            const tool = req.body;
+            const result = await toolsCollection.insertOne(tool);
             res.send(result);
         });
+
+        // delete a product by admin 
+
+        app.delete('/tools/delete/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: ObjectId(id) };
+            const result = await toolsCollection.deleteOne(query);
+            res.send(result);
+        });
+
 
         // deleteing a single order
 
@@ -223,6 +263,20 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, optiions);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
             res.send({ result, token });
+        });
+
+        // make payment
+
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const order = req.body;
+            const pirce = order.totalPrice;
+            const ammount = pirce * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: ammount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({ clientSecret: paymentIntent.client_secret, })
         });
     }
 
