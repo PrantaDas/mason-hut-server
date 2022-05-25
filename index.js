@@ -158,6 +158,21 @@ async function run() {
             res.send(result);
         });
 
+
+        // change staus of order
+
+        app.patch('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: true
+                }
+            };
+            const result = await ordersCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        });
+
         // all reviews
 
         app.get('/review', async (req, res) => {
