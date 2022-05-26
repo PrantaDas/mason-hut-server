@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const verify = require('jsonwebtoken/verify');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -136,7 +137,7 @@ async function run() {
 
         // get all orders
 
-        app.get('/order', async (req, res) => {
+        app.get('/order',verifyJWT,verifyAdmin, async (req, res) => {
             const result = await ordersCollection.find({}).toArray();
             res.send(result);
         });
@@ -161,7 +162,7 @@ async function run() {
 
         // change staus of order
 
-        app.patch('/order/:id', async (req, res) => {
+        app.patch('/order/:id',verifyJWT,verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const updatedDoc = {
@@ -191,7 +192,7 @@ async function run() {
 
         // load all user
 
-        app.get('/user', async (req, res) => {
+        app.get('/user',verifyJWT,verifyAdmin, async (req, res) => {
             const result = await usersCollection.find({}).toArray();
             res.send(result);
         });
@@ -209,7 +210,7 @@ async function run() {
 
         // upload user informatin
 
-        app.put('/user/:email', async (req, res) => {
+        app.put('/user/:email',verifyJWT, async (req, res) => {
             const updatedProfile = req.body;
             const email = req.params.email;
             const filter = { email: email };
@@ -247,7 +248,7 @@ async function run() {
 
         // delete a product by admin 
 
-        app.delete('/tools/delete/:id', verifyJWT, async (req, res) => {
+        app.delete('/tools/delete/:id', verifyJWT,verifyAdmin, async (req, res) => {
             const id = req.params.id;
             console.log(id);
             const query = { _id: ObjectId(id) };
@@ -258,7 +259,7 @@ async function run() {
 
         // deleteing a single order
 
-        app.delete('/order/:id', async (req, res) => {
+        app.delete('/order/:id',verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
